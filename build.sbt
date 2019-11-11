@@ -17,7 +17,16 @@ lazy val root = (project in file(".")).
   settings(
     libraryDependencies ++= Seq(
       "co.fs2" %% "fs2-core" % "2.0.1",
-      "org.apache.hive" % "hive-streaming" % "3.1.2",
+      "org.apache.hive" % "hive-streaming" % "3.1.2"
+        exclude ("org.slf4j", "slf4j-api")
+        exclude("org.slf4j", "slf4j-log4j12")
+        exclude("log4j", "log4j")
+        exclude("org.apache.logging.log4j", "log4j-slf4j-impl"),
+      "org.apache.hive.hcatalog" % "hive-hcatalog-core" % "3.1.2"
+        exclude ("org.slf4j", "slf4j-api")
+        exclude("org.slf4j", "slf4j-log4j12")
+        exclude("log4j", "log4j")
+        exclude("org.apache.logging.log4j", "log4j-slf4j-impl"),
       "io.circe" %% "circe-core" %  "0.11.1",
       "io.circe" %% "circe-generic" %  "0.11.1",
       "io.circe" %% "circe-parser" %  "0.11.1"
