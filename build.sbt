@@ -16,8 +16,8 @@ lazy val root = (project in file(".")).
   settings(commonSettings: _*).
   settings(
     libraryDependencies ++= Seq(
-      "org.scalactic" %% "scalactic" % "3.0.8",
-      "org.scalatest" %% "scalatest" % "3.0.8" % "test",
+      "org.scalactic" %% "scalactic" % "3.0.8" % Test,
+      "org.scalatest" %% "scalatest" % "3.0.8" % Test,
       "co.fs2" %% "fs2-core" % "2.0.1",
       "org.apache.hive" % "hive-streaming" % "3.1.0"
         exclude ("org.slf4j", "slf4j-api")

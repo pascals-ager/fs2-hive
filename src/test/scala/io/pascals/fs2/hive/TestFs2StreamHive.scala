@@ -2,30 +2,62 @@ package io.pascals.fs2.hive
 
 import java.util
 
+import cats.effect.IO
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hive.conf.HiveConf
 import org.apache.hive.streaming.{HiveStreamingConnection, StrictDelimitedInputWriter}
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.{Assertion, FunSuite, Matchers}
+
+import scala.util.Try
 
 class TestFs2StreamHive extends FunSuite with Matchers {
 
 
-  private val HIVE_CONF_PATH = "src/main/resources/hive-site.xml"
+  private val HIVE_CONF_PATH = "src/test/resources/hive-site.xml"
 
   val hiveConf = new HiveConf()
   hiveConf.addResource(new Path(HIVE_CONF_PATH))
 
   val dbName = "test_db"
   val tblName = "alerts"
-  val partitionVals = new util.ArrayList[String](2)
-  partitionVals.add("Asia")
-  partitionVals.add("China")
-
-  val writer: StrictDelimitedInputWriter = StrictDelimitedInputWriter.newBuilder()
-    .withFieldDelimiter(',')
-    .build()
 
   test("Simple Streaming Connection Test") {
+    val writer: StrictDelimitedInputWriter = StrictDelimitedInputWriter.newBuilder()
+      .withFieldDelimiter(',')
+      .build()
+
+    val builder: HiveStreamingConnection.Builder = HiveStreamingConnection.newBuilder()
+      .withDatabase(dbName)
+      .withTable(tblName)
+      .withAgentInfo("hive")
+      .withStreamingOptimizations(true)
+      .withRecordWriter(writer)
+      .withHiveConf(hiveConf)
+
+    /*
+    val test: IO[Unit] = for {
+      connection <- IO(builder.connect())
+      _ <- IO(connection.beginTransaction())
+      _ <- IO(connection.write("13,value13,Asia,India".getBytes()))
+    } yield connection.commitTransaction()
+
+
+    test.unsafeRunSync()
+
+    */
+
+/*
+    val f: fs2.Stream[IO, Unit] = fs2.Stream.bracket(IO.delay(builder.connect()))(conn => IO.delay(conn.close())).map{
+      conn =>
+      { conn.beginTransaction()
+        conn.write("13,value13,Asia,China".getBytes())
+        conn.commitTransaction()
+      }
+    }
+
+    f.compile.drain
+*/
+    /*
     val connection: HiveStreamingConnection = HiveStreamingConnection.newBuilder()
       .withDatabase(dbName)
       .withTable(tblName)
@@ -37,7 +69,7 @@ class TestFs2StreamHive extends FunSuite with Matchers {
 
     // begin a transaction, write records and commit 1st transaction
     try {
-      connection.beginTransaction()
+      val a = connection.beginTransaction()
       connection.write("11,value11,Asia,India".getBytes())
       // connection.write("12,value12".getBytes())
 
@@ -57,5 +89,6 @@ class TestFs2StreamHive extends FunSuite with Matchers {
     finally {
       connection.close()
     }
+    */
   }
 }
