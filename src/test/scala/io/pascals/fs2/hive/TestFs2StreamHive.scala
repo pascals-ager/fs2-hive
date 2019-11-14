@@ -10,9 +10,7 @@ import org.scalatest.{FunSuite, Matchers}
 
 class TestFs2StreamHive extends FunSuite with Matchers {
 
-
   private val HIVE_CONF_PATH = "src/test/resources/hive-site.xml"
-
   val hiveConf = new HiveConf()
   hiveConf.addResource(new Path(HIVE_CONF_PATH))
 
