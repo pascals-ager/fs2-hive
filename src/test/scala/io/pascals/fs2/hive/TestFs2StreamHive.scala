@@ -3,8 +3,10 @@ package io.pascals.fs2.hive
 import java.util
 
 import cats.effect.IO
+import fs2._
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hive.conf.HiveConf
+import org.apache.hadoop.hive.metastore.api.NoSuchObjectException
 import org.apache.hive.streaming.{HiveStreamingConnection, StrictDelimitedInputWriter}
 import org.scalatest.{Assertion, FunSuite, Matchers}
 
@@ -22,6 +24,7 @@ class TestFs2StreamHive extends FunSuite with Matchers {
   val tblName = "alerts"
 
   test("Simple Streaming Connection Test") {
+
     val writer: StrictDelimitedInputWriter = StrictDelimitedInputWriter.newBuilder()
       .withFieldDelimiter(',')
       .build()
@@ -33,6 +36,7 @@ class TestFs2StreamHive extends FunSuite with Matchers {
       .withStreamingOptimizations(true)
       .withRecordWriter(writer)
       .withHiveConf(hiveConf)
+
 
     /*
     val test: IO[Unit] = for {
@@ -46,17 +50,21 @@ class TestFs2StreamHive extends FunSuite with Matchers {
 
     */
 
-/*
-    val f: fs2.Stream[IO, Unit] = fs2.Stream.bracket(IO.delay(builder.connect()))(conn => IO.delay(conn.close())).map{
+
+    val f: Stream[IO, Unit] = Stream.bracket(IO.delay(builder.connect()))(conn => IO.delay(conn.close())).map{
       conn =>
       { conn.beginTransaction()
-        conn.write("13,value13,Asia,China".getBytes())
+        conn.write("17,value17,Africa,Nigeria".getBytes())
         conn.commitTransaction()
       }
     }
 
-    f.compile.drain
-*/
+    f.handleErrorWith{
+     f => Stream.emit{
+       fail(s"Exception occurred. ${f.getCause}")
+     }
+    }.compile.drain.unsafeRunSync()
+
     /*
     val connection: HiveStreamingConnection = HiveStreamingConnection.newBuilder()
       .withDatabase(dbName)
