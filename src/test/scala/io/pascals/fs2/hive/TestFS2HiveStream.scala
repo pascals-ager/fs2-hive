@@ -6,6 +6,7 @@ import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hive.conf.HiveConf
 import org.apache.hive.streaming.{HiveStreamingConnection, StrictDelimitedInputWriter}
 import io.pascals.fs2.hive.tags.{IntegrationTest, InvalidTableTest, InvocationTargetExceptionTest}
+import org.apache.hadoop.hive.metastore.api.NoSuchObjectException
 import org.scalatest.{FunSuite, Matchers}
 
 class TestFS2HiveStream extends FunSuite with Matchers {
@@ -70,6 +71,8 @@ class TestFS2HiveStream extends FunSuite with Matchers {
     f.handleErrorWith{
       f => Stream.emit{
         assert(f.isInstanceOf[org.apache.hive.streaming.InvalidTable])
+        assert(f.getCause.isInstanceOf[NoSuchObjectException])
+        assert(f.getLocalizedMessage == "Invalid table db:test, table:alerts: hive.test.alerts table not found")
       }
     }.compile.drain.unsafeRunSync()
   }

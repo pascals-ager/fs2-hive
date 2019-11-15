@@ -1,6 +1,6 @@
 package io.pascals.fs2.hive.utils
 
-import cats.effect.{ConcurrentEffect, Sync}
+import cats.effect.Sync
 import fs2.{Chunk, Pipe, Pull, Stream}
 
 trait StreamingSink[F[_], I] {
@@ -17,6 +17,5 @@ object StreamingSink {
           }).as(Some(tl))
           case None => Pull.pure(None)
         }
-      }
-
+    }
 }

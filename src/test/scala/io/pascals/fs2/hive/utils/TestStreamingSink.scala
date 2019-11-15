@@ -13,8 +13,7 @@ object TestStreamingSink extends IOApp {
     val HIVE_CONF_PATH = "src/test/resources/hive-site.xml"
     val hiveConf = new HiveConf()
     hiveConf.addResource(new Path(HIVE_CONF_PATH))
-
-    val dbName = "test_db"
+    val dbName = "test"
     val tblName = "alerts"
     val writer: StrictDelimitedInputWriter = StrictDelimitedInputWriter.newBuilder()
       .withFieldDelimiter(',')
@@ -42,10 +41,8 @@ object TestStreamingSink extends IOApp {
 
     stream.through(StreamingSink[IO, String]).handleErrorWith{
       f => Stream.emit{
-        IO.delay(println(s"Exception occurred. ${f.getCause}"))
+        println(s"Exception occurred. ${f.getCause}")
       }
     }.compile.drain.as(ExitCode.Success)
-
   }
-
 }
