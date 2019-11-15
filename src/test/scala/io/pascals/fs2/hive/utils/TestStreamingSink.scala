@@ -3,17 +3,20 @@ package io.pascals.fs2.hive.utils
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.implicits._
 import fs2.Stream
+import io.pascals.fs2.hive.tags.Fs2BindTest
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hive.conf.HiveConf
 import org.apache.hive.streaming.{HiveStreamingConnection, StrictDelimitedInputWriter}
+import org.scalatest.{FunSuite, Matchers}
 
-object TestStreamingSink extends IOApp {
+class TestStreamingSink extends FunSuite with Matchers {
 
-  def run(args: List[String]): IO[ExitCode] = {
-    val HIVE_CONF_PATH = "src/test/resources/hive-site.xml"
-    val hiveConf = new HiveConf()
-    hiveConf.addResource(new Path(HIVE_CONF_PATH))
-    val dbName = "test"
+  val HIVE_CONF_PATH = "src/test/resources/hive-site.xml"
+  val hiveConf = new HiveConf()
+  hiveConf.addResource(new Path(HIVE_CONF_PATH))
+
+  test("Fs2Binding with one write per transaction Test", Fs2BindTest)  {
+    val dbName = "test_db"
     val tblName = "alerts"
     val writer: StrictDelimitedInputWriter = StrictDelimitedInputWriter.newBuilder()
       .withFieldDelimiter(',')
@@ -39,10 +42,12 @@ object TestStreamingSink extends IOApp {
       "19,Fs2StreamBinding,Africa,Egypt",
       "20,Fs2StreamBinding,Africa,Zimbabwe").covary[IO]
 
-    stream.through(StreamingSink[IO, String]).handleErrorWith{
-      f => Stream.emit{
-        println(s"Exception occurred. ${f.getCause}")
+    stream
+      .through(StreamingSink[IO, String])
+      .handleErrorWith{
+        f => Stream.emit{
+        fail(s"Exception occurred. ${f}")
       }
-    }.compile.drain.as(ExitCode.Success)
+    }.compile.drain.unsafeRunSync()
   }
 }
