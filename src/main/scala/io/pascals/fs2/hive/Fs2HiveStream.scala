@@ -9,6 +9,6 @@ import org.apache.hive.streaming.{HiveStreamingConnection, StrictDelimitedInputW
 
 import scala.collection.mutable.ArrayBuffer
 
-object Fs2StreamHive extends App {
+object Fs2HiveStream extends App {
 
 }
