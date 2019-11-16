@@ -1,9 +1,15 @@
 package io.pascals.fs2.hive.utils
 
-import cats.effect.{ExitCode, IO, IOApp}
-import cats.implicits._
+import java.sql.{Timestamp => SqlTimestamp}
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+
+import cats.effect.IO
 import fs2.Stream
 import io.circe.Decoder.Result
+import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import io.circe.{Decoder, Encoder, HCursor, Json}
+import io.circe.syntax._
 import io.pascals.fs2.hive.tags.Fs2BindTest
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hive.conf.HiveConf
@@ -16,7 +22,7 @@ class TestStreamingSink extends FunSuite with Matchers {
   val hiveConf = new HiveConf()
   hiveConf.addResource(new Path(HIVE_CONF_PATH))
 
-  test("Fs2Binding with one delimited WpT", Fs2BindTest)  {
+  test("Fs2Binding with one delimited WpT")  {
     val dbName = "test_db"
     val tblName = "alerts"
     val writer: StrictDelimitedInputWriter = StrictDelimitedInputWriter.newBuilder()
@@ -58,16 +64,28 @@ class TestStreamingSink extends FunSuite with Matchers {
     val jsonWriter: StrictJsonWriter = StrictJsonWriter.newBuilder()
       .build()
 
-    import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-    import io.circe.{Decoder, Encoder, HCursor, Json}
-    import io.circe.syntax._
+    case class Alerts(id: Int,
+                      tracking_id: String,
+                      msg: String,
+                      continent: String,
+                      country: String,
+                      event_time: SqlTimestamp,
+                      year: Int,
+                      month: Int,
+                      day: Int)
 
-    case class Alerts(id: String, msg: String, continent: String, country: String)
+
+
+    implicit val SqlTimestampFormat : Encoder[SqlTimestamp] with Decoder[SqlTimestamp] = new Encoder[SqlTimestamp] with Decoder[SqlTimestamp] {
+      override def apply(a: SqlTimestamp): Json = Encoder.encodeString.apply(a.toString)
+
+      override def apply(c: HCursor): Result[SqlTimestamp] = Decoder.decodeString.map(s => SqlTimestamp.valueOf(s) ).apply(c)
+    }
 
     implicit val alertsDecoder: Decoder[Alerts] = deriveDecoder[Alerts]
     implicit val alertsEncoder: Encoder[Alerts] = deriveEncoder[Alerts]
 
-    val alertsRecord: Alerts = Alerts("34", "Fs2Binding with one Json WpT Test", "Africa", "Congo")
+    val alertsRecord: Alerts = Alerts(34, "34", "Fs2Binding with one Json WpT Test", "Europe", "Germany", SqlTimestamp.valueOf("2019-11-16 13:02:03"), 2019, 11, 16)
 
     implicit def hiveSink: StreamingSink[IO, Alerts] = ( in: Alerts ) => {
       val con = HiveStreamingConnection.newBuilder()
