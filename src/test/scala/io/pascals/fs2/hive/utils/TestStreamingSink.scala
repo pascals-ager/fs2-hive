@@ -22,7 +22,7 @@ class TestStreamingSink extends FunSuite with Matchers {
   val hiveConf = new HiveConf()
   hiveConf.addResource(new Path(HIVE_CONF_PATH))
 
-  test("Fs2Binding with one delimited WpT")  {
+  test("Fs2Binding with one delimited WpT", Fs2BindTest)  {
     val dbName = "test_db"
     val tblName = "alerts"
     val writer: StrictDelimitedInputWriter = StrictDelimitedInputWriter.newBuilder()
@@ -85,7 +85,7 @@ class TestStreamingSink extends FunSuite with Matchers {
     implicit val alertsDecoder: Decoder[Alerts] = deriveDecoder[Alerts]
     implicit val alertsEncoder: Encoder[Alerts] = deriveEncoder[Alerts]
 
-    val alertsRecord: Alerts = Alerts(34, "34", "Fs2Binding with one Json WpT Test", "Europe", "Germany", SqlTimestamp.valueOf("2019-11-16 13:02:03"), 2019, 11, 16)
+    val alertsRecord: Alerts = Alerts(34, "34", "Fs2Binding with one Json WpT Test", "Europe", "Germany", SqlTimestamp.valueOf("2019-11-16 13:02:03.456"), 2019, 11, 16)
 
     implicit def hiveSink: StreamingSink[IO, Alerts] = ( in: Alerts ) => {
       val con = HiveStreamingConnection.newBuilder()
