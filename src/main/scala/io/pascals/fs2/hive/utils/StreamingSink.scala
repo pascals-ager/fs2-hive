@@ -1,11 +1,7 @@
 package io.pascals.fs2.hive.utils
 
-import cats.effect
-import cats.effect.{ConcurrentEffect, IO, Resource, Sync}
+import cats.effect.Sync
 import fs2.{Chunk, Pipe, Pull, Stream}
-import org.apache.hadoop.fs.Path
-import org.apache.hadoop.hive.conf.HiveConf
-import org.apache.hive.streaming.{HiveStreamingConnection, StrictJsonWriter}
 
 trait StreamingSink[F[_], I] {
   def writeSink(in: I) : Unit
