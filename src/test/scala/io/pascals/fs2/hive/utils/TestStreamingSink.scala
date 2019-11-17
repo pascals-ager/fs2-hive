@@ -1,9 +1,6 @@
 package io.pascals.fs2.hive.utils
 
 import java.sql.{Timestamp => SqlTimestamp}
-import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
-
 import cats.effect.IO
 import fs2.Stream
 import io.circe.Decoder.Result
