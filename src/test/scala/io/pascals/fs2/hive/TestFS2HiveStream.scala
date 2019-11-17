@@ -17,7 +17,7 @@ class TestFS2HiveStream extends FunSuite with Matchers {
 
   test("Simple Streaming Connection Test", IntegrationTest) {
     val dbName = "test_db"
-    val tblName = "alerts"
+    val tblName = "simple_alerts"
     val writer: StrictDelimitedInputWriter = StrictDelimitedInputWriter.newBuilder()
       .withFieldDelimiter(',')
       .build()
@@ -30,7 +30,7 @@ class TestFS2HiveStream extends FunSuite with Matchers {
       .withRecordWriter(writer)
       .withHiveConf(hiveConf)
 
-    val f: Stream[IO, Unit] = Stream.bracket(IO.delay(builder.connect()))(conn => IO.delay(conn.close())).map{
+    val s: Stream[IO, Unit] = Stream.bracket(IO.delay(builder.connect()))(conn => IO.delay(conn.close())).map{
       conn =>
       { conn.beginTransaction()
         conn.write("17,SimpleStreaming,12,Africa,Nigeria".getBytes())
@@ -38,7 +38,7 @@ class TestFS2HiveStream extends FunSuite with Matchers {
       }
     }
 
-    f.handleErrorWith{
+    s.handleErrorWith{
       f => Stream.emit{
         fail(s"Exception occurred. ${f.getCause}")
       }
@@ -47,7 +47,7 @@ class TestFS2HiveStream extends FunSuite with Matchers {
 
   test("InvalidTable Exception Test", InvalidTableTest) {
     val dbName = "test"
-    val tblName = "alerts"
+    val tblName = "simple_alerts"
     val writer: StrictDelimitedInputWriter = StrictDelimitedInputWriter.newBuilder()
       .withFieldDelimiter(',')
       .build()
@@ -69,10 +69,10 @@ class TestFS2HiveStream extends FunSuite with Matchers {
     }
 
     f.handleErrorWith{
-      f => Stream.emit{
+      f => Stream{
         assert(f.isInstanceOf[org.apache.hive.streaming.InvalidTable])
         assert(f.getCause.isInstanceOf[NoSuchObjectException])
-        assert(f.getLocalizedMessage == "Invalid table db:test, table:alerts: hive.test.alerts table not found")
+        assert(f.getLocalizedMessage == "Invalid table db:test, table:simple_alerts: hive.test.simple_alerts table not found")
       }
     }.compile.drain.unsafeRunSync()
   }
@@ -81,7 +81,7 @@ class TestFS2HiveStream extends FunSuite with Matchers {
 
     hiveConf.set("hive.metastore.uris", "thrift://hive-metastore-three:9084")
     val dbName = "test_db"
-    val tblName = "alerts"
+    val tblName = "simple_alerts"
     val writer: StrictDelimitedInputWriter = StrictDelimitedInputWriter.newBuilder()
       .withFieldDelimiter(',')
       .build()

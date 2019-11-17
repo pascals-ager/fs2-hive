@@ -24,7 +24,7 @@ class TestStreamingSink extends FunSuite with Matchers {
 
   test("Fs2Binding with one delimited WpT", Fs2BindTest)  {
     val dbName = "test_db"
-    val tblName = "alerts"
+    val tblName = "simple_alerts"
     val writer: StrictDelimitedInputWriter = StrictDelimitedInputWriter.newBuilder()
       .withFieldDelimiter(',')
       .build()
@@ -87,7 +87,7 @@ class TestStreamingSink extends FunSuite with Matchers {
 
     val alertsRecord: Alerts = Alerts(34, "34", "Fs2Binding with one Json WpT Test", "Europe", "Germany", SqlTimestamp.valueOf("2019-11-16 13:02:03.456"), 2019, 11, 16)
 
-    implicit def hiveSink: StreamingSink[IO, Alerts] = ( in: Alerts ) => {
+    implicit def hiveSink: StreamingSink[IO, Alerts] = ( in: Alerts ) => IO.delay {
       val con = HiveStreamingConnection.newBuilder()
         .withDatabase(dbName)
         .withTable(tblName)
