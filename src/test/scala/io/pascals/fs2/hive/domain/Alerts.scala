@@ -1,9 +1,10 @@
-package io.pascals.fs2.hive.utils
+package io.pascals.fs2.hive.domain
+
+import java.sql.{Timestamp => SqlTimestamp}
 
 import io.circe.Decoder.Result
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder, HCursor, Json}
-import java.sql.{Timestamp => SqlTimestamp}
 
 case class Alerts (id: Int,
                    tracking_id: String,
@@ -25,4 +26,3 @@ object Alerts {
 
   implicit val alertsDecoder: Decoder[Alerts] = deriveDecoder[Alerts]
   implicit val alertsEncoder: Encoder[Alerts] = deriveEncoder[Alerts]
-}

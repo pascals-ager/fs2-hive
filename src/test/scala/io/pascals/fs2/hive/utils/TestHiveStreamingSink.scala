@@ -3,7 +3,8 @@ package io.pascals.fs2.hive.utils
 import cats.implicits._
 import cats.effect.IO
 import fs2.{Chunk, Stream}
-import io.pascals.fs2.hive.tags.Fs2BindTest
+import io.pascals.fs2.hive.domain._
+import io.pascals.fs2.hive.tags._
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hive.conf.HiveConf
 import org.apache.hive.streaming.{StrictDelimitedInputWriter, StrictJsonWriter}
@@ -47,7 +48,16 @@ class TestHiveStreamingSink extends FunSuite with Matchers {
     import Alerts._
     import io.circe.syntax._
 
-    val alertsRecord: Alerts = Alerts(34, "34", "HiveStreamingSink Resource acquisition with One WpT JsonWriter", "Europe", "Poland", SqlTimestamp.valueOf("2019-11-16 13:02:03.456"), 2019, 11, 16)
+    val alertsRecord: Alerts = Alerts(
+      34,
+      "34",
+      "HiveStreamingSink Resource acquisition with One WpT JsonWriter",
+      "Europe",
+      "Poland",
+      SqlTimestamp.valueOf("2019-11-16 13:02:03.456"),
+      2019,
+      11,
+      16)
 
     val stream: Stream[IO, Alerts] = Stream(alertsRecord,
       alertsRecord,
