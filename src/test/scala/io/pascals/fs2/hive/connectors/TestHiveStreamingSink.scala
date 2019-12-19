@@ -1,14 +1,15 @@
-package io.pascals.fs2.hive.utils
+package io.pascals.fs2.hive.connectors
 
 import cats.implicits._
 import cats.effect.IO
-import fs2.{Chunk, Stream}
+import fs2.{Chunk, Pull, Stream}
 import io.pascals.fs2.hive.domain._
 import io.pascals.fs2.hive.tags._
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hive.conf.HiveConf
 import org.apache.hive.streaming.{StrictDelimitedInputWriter, StrictJsonWriter}
 import java.sql.{Timestamp => SqlTimestamp}
+
 import org.scalatest.{FunSuite, Matchers}
 
 class TestHiveStreamingSink extends FunSuite with Matchers {
@@ -23,7 +24,7 @@ class TestHiveStreamingSink extends FunSuite with Matchers {
     val writer: StrictDelimitedInputWriter = StrictDelimitedInputWriter.newBuilder()
       .withFieldDelimiter(',')
       .build()
-    //  And eventually the call itself:
+
     val stream: Stream[IO, String] = Stream(
       "17,HiveStreamingSink Resource acquisition,testContinent,testCountry",
       "18,HiveStreamingSink Resource acquisition,testContinent,testCountry",
@@ -33,7 +34,7 @@ class TestHiveStreamingSink extends FunSuite with Matchers {
 
     Stream.resource(HiveStreamingSink.create[IO](dbName,tblName,writer,hiveConf)).flatMap { hive =>
       stream
-        .map(s => Chunk.bytes(s.getBytes))
+        .map(s => s.getBytes)
         .evalMap(in => hive.write(in))
         .adaptErr { case e => fail(s"My exception occurred. ${e}") }
     }.compile.drain.unsafeRunSync()
@@ -66,7 +67,7 @@ class TestHiveStreamingSink extends FunSuite with Matchers {
 
     Stream.resource(HiveStreamingSink.create[IO](dbName,tblName,writer,hiveConf)).flatMap { hive =>
       stream
-        .map(s => Chunk.bytes(s.asJson.toString().getBytes))
+        .map(s => s.asJson.toString().getBytes)
         .evalMap(in => hive.write(in))
         .adaptErr { case e => fail(s"My exception occurred. ${e}") }
     }.compile.drain.unsafeRunSync()

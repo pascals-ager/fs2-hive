@@ -26,3 +26,4 @@ object Alerts {
 
   implicit val alertsDecoder: Decoder[Alerts] = deriveDecoder[Alerts]
   implicit val alertsEncoder: Encoder[Alerts] = deriveEncoder[Alerts]
+}
