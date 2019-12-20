@@ -1,4 +1,4 @@
-CREATE TABLE `clicks`(
+CREATE TABLE `kafka_clicks`(
   `type` string,
   `id` string,
   `isp` string,

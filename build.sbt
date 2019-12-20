@@ -19,6 +19,7 @@ lazy val root = (project in file(".")).
       "org.scalactic" %% "scalactic" % "3.0.8" % Test,
       "org.scalatest" %% "scalatest" % "3.0.8" % Test,
       "co.fs2" %% "fs2-core" % "2.1.0",
+      "com.ovoenergy" %% "fs2-kafka" % "0.20.1" % Test,
       "org.apache.hive" % "hive-streaming" % "3.1.0"
         exclude ("org.slf4j", "slf4j-api")
         exclude("org.slf4j", "slf4j-log4j12")
