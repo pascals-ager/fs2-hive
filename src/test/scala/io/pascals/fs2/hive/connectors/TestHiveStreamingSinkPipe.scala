@@ -20,43 +20,61 @@ import scala.concurrent.ExecutionContext
 class TestHiveStreamingSinkPipe extends FunSuite with Matchers {
 
   val HIVE_CONF_PATH = "src/test/resources/hive-site.xml"
-  val hiveConf = new HiveConf()
+  val hiveConf       = new HiveConf()
   hiveConf.addResource(new Path(HIVE_CONF_PATH))
-  implicit val timer: Timer[IO] = IO.timer(ExecutionContext.global)
+  implicit val timer: Timer[IO]     = IO.timer(ExecutionContext.global)
   implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
 
-  def multiTransactionalHiveStream(dbName: String,
-                                   tblName: String,
-                                   hconf: HiveConf): Pipe[IO, Chunk[Chunk[Array[Byte]]], Stream[IO, Unit]] = in =>
-    in.repeatPull {
-      _.uncons.flatMap {
-        case Some((hd: Chunk[Chunk[Chunk[Array[Byte]]]], tl: Stream[IO, Chunk[Chunk[Array[Byte]]]])) => Pull.output(
-          hd.map {
-            chunk =>
-              Stream
-                .resource(HiveStreamingSink.create[IO](
-                  dbName,
-                  tblName,
-                  StrictJsonWriter.newBuilder().build(),
-                  hconf))
-                .flatMap {
-                  hSink =>
-                    val write: IO[Unit] = for {
-                      statsBefore <- hSink.connectionStats()
-                      _ <- hSink.writeChunks(chunk)
-                      statsAfter <- hSink.connectionStats()
-                    } yield ()
-                    Stream.eval(write)
+  def multiTransactionalHiveStream(
+      dbName: String,
+      tblName: String,
+      hconf: HiveConf
+  ): Pipe[IO, Chunk[Chunk[Array[Byte]]], Stream[IO, Unit]] =
+    in =>
+      in.repeatPull {
+        _.uncons.flatMap {
+          case Some(
+              (
+                hd: Chunk[Chunk[Chunk[Array[Byte]]]],
+                tl: Stream[IO, Chunk[Chunk[Array[Byte]]]]
+              )
+              ) =>
+            Pull
+              .output(
+                hd.map { chunk =>
+                  Stream
+                    .resource(
+                      HiveStreamingSink.create[IO](
+                        dbName,
+                        tblName,
+                        StrictJsonWriter.newBuilder().build(),
+                        hconf
+                      )
+                    )
+                    .flatMap { hSink =>
+                      val write: IO[Unit] = for {
+                        statsBefore <- hSink.connectionStats()
+                        _           <- hSink.writeChunks(chunk)
+                        statsAfter  <- hSink.connectionStats()
+                      } yield ()
+                      Stream.eval(write)
+                    }
                 }
-          }
-        ).as(Some(tl))
-        case None => Pull.pure(None)
+              )
+              .as(Some(tl))
+          case None => Pull.pure(None)
+        }
       }
-    }
 
-  test("HiveStreamingSink Pipe with Multiple Transactions per Connection", IntegrationTest ) {
+  test(
+    "HiveStreamingSink Pipe with Multiple Transactions per Connection",
+    IntegrationTest
+  ) {
 
-    val kStream: Stream[IO, (KafkaMetadata[Option], Either[circe.Error, FlClicks[Option, Id]])] =
+    val kStream: Stream[
+      IO,
+      (KafkaMetadata[Option], Either[circe.Error, FlClicks[Option, Id]])
+    ] =
       consumerStream(consumerSettings)
         .evalTap(_.subscribeTo(subscribeTopic))
         .flatMap(_.stream)
@@ -67,7 +85,8 @@ class TestHiveStreamingSinkPipe extends FunSuite with Matchers {
               Option(committable.record.partition),
               Option(committable.record.topic),
               Option(committable.record.timestamp)
-            ), decode[FlClicks[Option, Id]](committable.record.value)
+            ),
+            decode[FlClicks[Option, Id]](committable.record.value)
           )
         }
 
@@ -75,7 +94,11 @@ class TestHiveStreamingSinkPipe extends FunSuite with Matchers {
       .filter(rec => rec._2.isRight)
       .map(rec => (rec._1, rec._2.right.get))
       .balanceThrough(1000, 3)(
-        Transform[IO, (KafkaMetadata[Option], FlClicks[Option, Id]), FlClicksKafkaEnriched[Option]]
+        Transform[
+          IO,
+          (KafkaMetadata[Option], FlClicks[Option, Id]),
+          FlClicksKafkaEnriched[Option]
+        ]
       )
       .balanceThrough(1000, 3)(
         Transform[IO, FlClicksKafkaEnriched[Option], FlClicksFlattened[Option]]
@@ -94,7 +117,5 @@ class TestHiveStreamingSinkPipe extends FunSuite with Matchers {
     writeTestStream.compile.drain.unsafeRunSync()
 
   }
-
-
 
 }

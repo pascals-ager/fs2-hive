@@ -3,7 +3,11 @@ package io.pascals.fs2.hive.connectors
 import cats.effect.{ExitCase, Resource, Sync}
 import fs2.Chunk
 import org.apache.hadoop.hive.conf.HiveConf
-import org.apache.hive.streaming.{AbstractRecordWriter, ConnectionStats, HiveStreamingConnection}
+import org.apache.hive.streaming.{
+  AbstractRecordWriter,
+  ConnectionStats,
+  HiveStreamingConnection
+}
 
 trait HiveStreamingSink[F[_]] {
   def abort(): F[Unit]
@@ -23,11 +27,11 @@ trait HiveStreamingSink[F[_]] {
 
 object HiveStreamingSink {
   def create[F[_]](
-                    dbName: String,
-                    tblName: String,
-                    writer: AbstractRecordWriter,
-                    hconf: HiveConf
-                  )(implicit F: Sync[F]): Resource[F, HiveStreamingSink[F]] = {
+      dbName: String,
+      tblName: String,
+      writer: AbstractRecordWriter,
+      hconf: HiveConf
+  )(implicit F: Sync[F]): Resource[F, HiveStreamingSink[F]] = {
 
     val open: F[HiveStreamingConnection] = F.delay {
       val builder = HiveStreamingConnection
@@ -83,17 +87,16 @@ object HiveStreamingSink {
             hStreamingConnection.commitTransaction()
           }
 
-          override def writeChunks(in: Chunk[Chunk[Array[Byte]]]): F[Unit] = F.delay {
-            in.foreach {
-              chunk =>
+          override def writeChunks(in: Chunk[Chunk[Array[Byte]]]): F[Unit] =
+            F.delay {
+              in.foreach { chunk =>
                 hStreamingConnection.beginTransaction()
                 chunk.foreach(
-                  rec =>
-                    hStreamingConnection.write(rec)
+                  rec => hStreamingConnection.write(rec)
                 )
                 hStreamingConnection.commitTransaction()
+              }
             }
-          }
         }
       }
   }

@@ -2,10 +2,9 @@ import sbtrelease.ReleaseStateTransformations._
 
 lazy val commonSettings = Seq(
   name := "fs2-hive-stream",
-  scalaVersion := "2.12.8",
+  scalaVersion := "2.12.10",
   organization := "io.pascals.fs2",
-  scalaVersion := "2.12.8",
-  crossScalaVersions := Seq("2.11.11", "2.12.8"),
+  crossScalaVersions := Seq("2.11.11", "2.12.10"),
   scalacOptions ++= Seq("-target:jvm-1.8", "-Ypartial-unification", "-feature", "-language:higherKinds"),
   addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.full)
 )
@@ -35,7 +34,7 @@ lazy val root = (project in file(".")).
       "io.circe" %% "circe-parser" %  "0.11.1"
     )
   )
-
+scalafmtOnCompile := true
 publishMavenStyle := true
 publishArtifact in Test := false
 publishTo := {

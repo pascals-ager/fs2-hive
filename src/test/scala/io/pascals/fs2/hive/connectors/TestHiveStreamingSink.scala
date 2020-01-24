@@ -15,13 +15,17 @@ import org.scalatest.{FunSuite, Matchers}
 class TestHiveStreamingSink extends FunSuite with Matchers {
 
   val HIVE_CONF_PATH = "src/test/resources/hive-site.xml"
-  val hiveConf = new HiveConf()
+  val hiveConf       = new HiveConf()
   hiveConf.addResource(new Path(HIVE_CONF_PATH))
 
-  test("HiveStreamingSink Resource acquisition with one WpT Simple Writer", Fs2BindTest)  {
-    val dbName = "test_db"
+  test(
+    "HiveStreamingSink Resource acquisition with one WpT Simple Writer",
+    Fs2BindTest
+  ) {
+    val dbName  = "test_db"
     val tblName = "simple_alerts"
-    val writer: StrictDelimitedInputWriter = StrictDelimitedInputWriter.newBuilder()
+    val writer: StrictDelimitedInputWriter = StrictDelimitedInputWriter
+      .newBuilder()
       .withFieldDelimiter(',')
       .build()
 
@@ -32,18 +36,27 @@ class TestHiveStreamingSink extends FunSuite with Matchers {
       "20,HiveStreamingSink Resource acquisition,testContinent,testCountry"
     ).covary[IO]
 
-    Stream.resource(HiveStreamingSink.create[IO](dbName,tblName,writer,hiveConf)).flatMap { hive =>
-      stream
-        .map(s => s.getBytes)
-        .evalMap(in => hive.write(in))
-        .adaptErr { case e => fail(s"My exception occurred. ${e}") }
-    }.compile.drain.unsafeRunSync()
+    Stream
+      .resource(HiveStreamingSink.create[IO](dbName, tblName, writer, hiveConf))
+      .flatMap { hive =>
+        stream
+          .map(s => s.getBytes)
+          .evalMap(in => hive.write(in))
+          .adaptErr { case e => fail(s"My exception occurred. ${e}") }
+      }
+      .compile
+      .drain
+      .unsafeRunSync()
   }
 
-  test("HiveStreamingSink Resource acquisition with One WpT JsonWriter", Fs2BindTest)  {
-    val dbName = "test_db"
+  test(
+    "HiveStreamingSink Resource acquisition with One WpT JsonWriter",
+    Fs2BindTest
+  ) {
+    val dbName  = "test_db"
     val tblName = "alerts"
-    val writer: StrictJsonWriter = StrictJsonWriter.newBuilder()
+    val writer: StrictJsonWriter = StrictJsonWriter
+      .newBuilder()
       .build()
 
     import Alerts._
@@ -58,18 +71,22 @@ class TestHiveStreamingSink extends FunSuite with Matchers {
       SqlTimestamp.valueOf("2019-11-16 13:02:03.456"),
       2019,
       11,
-      16)
+      16
+    )
 
-    val stream: Stream[IO, Alerts] = Stream(alertsRecord,
-      alertsRecord,
-      alertsRecord,
-      alertsRecord).covary[IO]
+    val stream: Stream[IO, Alerts] =
+      Stream(alertsRecord, alertsRecord, alertsRecord, alertsRecord).covary[IO]
 
-    Stream.resource(HiveStreamingSink.create[IO](dbName,tblName,writer,hiveConf)).flatMap { hive =>
-      stream
-        .map(s => s.asJson.toString().getBytes)
-        .evalMap(in => hive.write(in))
-        .adaptErr { case e => fail(s"My exception occurred. ${e}") }
-    }.compile.drain.unsafeRunSync()
+    Stream
+      .resource(HiveStreamingSink.create[IO](dbName, tblName, writer, hiveConf))
+      .flatMap { hive =>
+        stream
+          .map(s => s.asJson.toString().getBytes)
+          .evalMap(in => hive.write(in))
+          .adaptErr { case e => fail(s"My exception occurred. ${e}") }
+      }
+      .compile
+      .drain
+      .unsafeRunSync()
   }
 }
