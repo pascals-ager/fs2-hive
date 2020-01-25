@@ -91,9 +91,7 @@ object HiveStreamingSink {
             F.delay {
               in.foreach { chunk =>
                 hStreamingConnection.beginTransaction()
-                chunk.foreach(
-                  rec => hStreamingConnection.write(rec)
-                )
+                chunk.foreach(rec => hStreamingConnection.write(rec))
                 hStreamingConnection.commitTransaction()
               }
             }

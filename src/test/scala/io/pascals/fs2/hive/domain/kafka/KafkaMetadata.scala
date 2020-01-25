@@ -31,13 +31,12 @@ object KafkaMetadata {
 
       override def apply(c: HCursor): Result[Timestamp] =
         Decoder.decodeString
-          .map(
-            s =>
-              Timestamp.createTime(
-                OffsetDateTime
-                  .parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                  .toEpochSecond
-              )
+          .map(s =>
+            Timestamp.createTime(
+              OffsetDateTime
+                .parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                .toEpochSecond
+            )
           )
           .apply(c)
     }

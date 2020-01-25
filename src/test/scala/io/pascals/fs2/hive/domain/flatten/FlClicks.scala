@@ -36,8 +36,8 @@ object FlClicks {
 
       override def apply(c: HCursor): Result[OffsetDateTime] =
         Decoder.decodeString
-          .map(
-            s => OffsetDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+          .map(s =>
+            OffsetDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
           )
           .apply(c)
     }
